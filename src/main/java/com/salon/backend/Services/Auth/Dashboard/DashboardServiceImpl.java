@@ -29,21 +29,41 @@ public class DashboardServiceImpl implements DashboardService {
     private final JwtService jwtService;
     private final SalonRepo salonRepo;
     @Override
-    public ApiResponse<DashboardLoginResponse> DashboardLogin(DashboardLoginRequest dashboardLoginRequest) {
-     User user=validateAdmin(dashboardLoginRequest.getAdminEmail()).getData();
+    public ApiResponse<DashboardLoginResponse> DashboardLogin(
+            DashboardLoginRequest dashboardLoginRequest) {
 
-     if(bCryptPasswordEncoder.matches( dashboardLoginRequest.getAdminPassword(),user.getPassword())){
-         return ApiResponse.error("Wrong Password , Please Try Again");
-     }
-     String token= jwtService.generateToken(user.getEmail());
-     DashboardLoginResponse dashboardLoginResponse=new DashboardLoginResponse(
-             token,
-             "Bearer"
-     );
+        ApiResponse<User> adminResponse =
+                validateAdmin(
+                        dashboardLoginRequest.getAdminEmail());
 
-        return ApiResponse.success("Dashboard Login Success",dashboardLoginResponse);
+        if (!adminResponse.isSuccess()) {
+            return ApiResponse.error(adminResponse.getMessage());
+        }
+
+        User user = adminResponse.getData();
+
+        if (!bCryptPasswordEncoder.matches(
+                dashboardLoginRequest.getAdminPassword(),
+                user.getPassword())) {
+
+            return ApiResponse.error(
+                    "Wrong Password , Please Try Again");
+        }
+
+        String token =
+                jwtService.generateToken(user.getEmail());
+
+        DashboardLoginResponse response =
+                new DashboardLoginResponse(
+                        token,
+                        "Bearer"
+                );
+
+        return ApiResponse.success(
+                "Dashboard Login Success",
+                response
+        );
     }
-
     @Override
     public ApiResponse<CreateSalonResponse> AcceptSalonRequest(CreateSalonRequest createSalonRequest,String adminEmail) {
         User user=validateAdmin(adminEmail).getData();

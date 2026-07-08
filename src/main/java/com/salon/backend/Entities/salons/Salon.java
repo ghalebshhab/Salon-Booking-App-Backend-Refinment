@@ -37,10 +37,8 @@ public class Salon {
     @OneToOne(cascade = CascadeType.ALL)
     private User owner;
 
-//    @OneToMany
-//    @JoinColumn(name = "employee_id")
-//    @ElementCollection(fetch = FetchType.LAZY)
-//    private User employee;
+    @OneToMany(mappedBy = "salon")
+    private List<User> employees;
 
     private Long currentEmployeesNumber;
 

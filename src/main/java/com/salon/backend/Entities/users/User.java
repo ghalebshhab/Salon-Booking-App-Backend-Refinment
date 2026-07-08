@@ -1,10 +1,8 @@
 package com.salon.backend.Entities.users;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.salon.backend.Entities.salons.Salon;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -36,4 +34,10 @@ public class User {
     private UserRole role;
 
     private UserStatus status;
+
+    @ManyToOne
+    @JoinColumn(name = "salon_id")
+    private Salon salon;
+
+
 }
