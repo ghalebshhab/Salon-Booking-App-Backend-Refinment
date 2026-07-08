@@ -119,7 +119,17 @@ public class EmploymentServiceImpl implements EmploymentService {
     }
 
     @Override
-    public ApiResponse<EmployeeRequestResponse> rejectRequest(RejectRequest rejectRequest) {
-        return null;
+    public ApiResponse<EmploymentRequest> rejectRequest(RejectRequest rejectRequest) {
+        Optional<EmploymentRequest> employ=employmentRepo.findById(rejectRequest.requestId());
+        if(employ.isEmpty()){
+            return ApiResponse.error("This Employment Request is not Found");
+        }
+
+        EmploymentRequest employmentRequest=employ.get();
+        employmentRequest.setStatus(EmploymentRequestStatus.Rejected);
+        employmentRepo.save(employmentRequest);
+
+
+        return ApiResponse.success("Employment Request Rejected , "+ rejectRequest.rejectionReason(),employmentRequest);
     }
 }

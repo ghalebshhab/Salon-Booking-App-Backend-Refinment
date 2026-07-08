@@ -8,6 +8,6 @@ public interface EmploymentService {
 ApiResponse<EmploymentRequest> joinSalon(JoinSalonRequest request, Long senderId);
 ApiResponse<EmploymentRequest> acceptRequest(AcceptRequest acceptRequest);
 ApiResponse<EmploymentRequest> sentInvitation(SentInvitation sentInvitation,Long salonId);
-ApiResponse<EmployeeRequestResponse> rejectRequest(RejectRequest rejectRequest);
+ApiResponse<EmploymentRequest> rejectRequest(RejectRequest rejectRequest);
 
 }
