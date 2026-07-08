@@ -1,0 +1,259 @@
+package com.salon.backend.Services.Salon;
+
+import com.salon.backend.DTOs.ApiResponse;
+import com.salon.backend.DTOs.Salon.CreateSalonRequest;
+import com.salon.backend.DTOs.Salon.CreateSalonResponse;
+import com.salon.backend.DTOs.Salon.UpdateSalonRequest;
+import com.salon.backend.Entities.salons.Salon;
+import com.salon.backend.Entities.salons.SalonStatus;
+import com.salon.backend.Entities.users.User;
+import com.salon.backend.Entities.users.UserRole;
+import com.salon.backend.Repositories.Salon.SalonRepo;
+import com.salon.backend.Repositories.User.UserRepo;
+import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalTime;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@AllArgsConstructor
+public class SalonServiceImpl implements SalonService {
+
+    private final SalonRepo salonRepo;
+    private  final UserRepo userRepo;
+    private final List<String> JordanCities = List.of(
+            "Amman", "Zarqa", "Irbid", "Aqaba", "Jerash",
+            "Madaba", "Ajloun", "As-Salt", "Al-Karak",
+            "Ma'an", "Tafilah", "Mafraq"
+    );
+    @Override
+    public ApiResponse<CreateSalonResponse> createSalon(CreateSalonRequest createSalonRequest,Long id) {
+        Optional<User> user = userRepo.findById(id);
+        if(user.isEmpty()) {
+            return ApiResponse.error("User not found");
+        }
+        User newUser=user.get();
+        Salon salo= salonRepo.findByOwnerPhoneNumber(newUser.getPhoneNumber());
+
+        if(salo!=null&&salo.getStatus()==SalonStatus.Requested){
+            return ApiResponse.error("You have a Salon already requested");
+        }
+        if(newUser.getRole()== UserRole.OWNER) {
+            return ApiResponse.error("You are Owner for an Another Salon");
+        }
+        if(createSalonRequest.getSalonName()==null||createSalonRequest.getSalonName().length()<3) {
+            return ApiResponse.error("Salon Name is Required and must be more than 3 characters");
+        }
+        if(createSalonRequest.getSalonCity()==null|| !JordanCities.contains(createSalonRequest.getSalonCity())) {
+            return ApiResponse.error("Salon City is Required , and must be a valid jordanian city .");
+        }
+        if(createSalonRequest.getSalonDescription()==null||createSalonRequest.getSalonDescription().length()<10) {
+            return ApiResponse.error("Salon Description is Required and must be more than 10 characters");
+        }
+        if(createSalonRequest.getSalonEmail()==null||
+                !createSalonRequest.getSalonEmail()
+                        .matches("^[A-Za-z0-9+_.-]+@(.+)$")){
+            return ApiResponse.error("Salon Email is Invalid");
+        }
+        if (createSalonRequest.getSalonPhoneNumber() == null ||
+                (!createSalonRequest.getSalonPhoneNumber().matches("^\\+9627\\d{8}$")
+                        && !createSalonRequest.getSalonPhoneNumber().matches("^07\\d{8}$"))) {
+            return ApiResponse.error("Phone number can not be null and must be like +9627XXXXXXXX or 07XXXXXXXX");
+        }
+        if(createSalonRequest.getOpeningTime()==null){
+            return ApiResponse.error("Opening Time is Required");
+        }
+        if(createSalonRequest.getClosingTime()==null){
+            return ApiResponse.error("Closing Time is Required");
+        }
+        if(!createSalonRequest.getOpeningTime().isBefore(createSalonRequest.getClosingTime())){
+            return ApiResponse.error("Opening Time must be before Closing Time ");
+        }
+        if(createSalonRequest.getMaxNumberOfEmployees()==null||createSalonRequest.getMaxNumberOfEmployees()<=0){
+            return ApiResponse.error("Max number of employees is required and must be greater than 0");
+
+        }
+        Salon salon=new Salon();
+        salon.setEmail(createSalonRequest.getSalonEmail());
+        salon.setOpeningTime(createSalonRequest.getOpeningTime());
+        salon.setClosingTime(createSalonRequest.getClosingTime());
+        salon.setLocation(createSalonRequest.getSalonCity());
+        salon.setDescription(createSalonRequest.getSalonDescription());
+        salon.setMaxEmployeesNumber(createSalonRequest.getMaxNumberOfEmployees());
+        salon.setSalonPhoneNumber(createSalonRequest.getSalonPhoneNumber());
+        salon.setProfilePictureUrl(createSalonRequest.getProfilePictureUrl());
+        salon.setOwner(newUser);
+        salon.setOwnerPhoneNumber(newUser.getPhoneNumber());
+        salon.setStatus(SalonStatus.Requested);
+        salon.setName(createSalonRequest.getSalonName());
+        salon.setCurrentEmployeesNumber(1L);
+        salonRepo.save(salon);
+
+        CreateSalonResponse createSalonResponse=new CreateSalonResponse(
+                salon.getId(),
+                salon.getName(),
+                salon.getSalonPhoneNumber(),
+                salon.getEmail(),
+                salon.getLocation(),
+                salon.getOwnerPhoneNumber(),
+                newUser.getUserName(),
+                salon.getOpeningTime(),
+                salon.getClosingTime(),
+                salon.getProfilePictureUrl(),
+                salon.getCurrentEmployeesNumber(),
+                salon.getMaxEmployeesNumber()
+        );
+
+
+        return ApiResponse.success("Salon Creation Requested",createSalonResponse);
+    }
+
+    @Override
+    public ApiResponse<CreateSalonResponse> updateSalon(UpdateSalonRequest updateSalonRequest,
+                                                        Long id,
+                                                        String  ownerEmail)
+    {
+        User user=userRepo.findByemail(ownerEmail);
+        if(user==null){
+            return ApiResponse.error("User not found");
+        }
+        Optional<Salon> salo=salonRepo.findById(id);
+        if(salo.isEmpty()){
+            return ApiResponse.error("Salon Not Found");
+        }
+        Salon salon=salo.get();
+        if(!salon.getOwner().equals(user)){
+            return ApiResponse.error("You can only update your salon");
+        }
+        if(updateSalonRequest.getSalonPhoneNumber()!=null&&
+                (updateSalonRequest.getSalonPhoneNumber().matches("^\\+9627\\d{8}$")
+                                                   ||
+                        updateSalonRequest.getSalonPhoneNumber().matches("^07\\d{8}$"))){
+            salon.setSalonPhoneNumber(updateSalonRequest.getSalonPhoneNumber());
+        }
+        else{
+            return ApiResponse.error("Salon Phone Number is Required , And must be in this format 0 Or +962 7XXXXXXXX");
+        }
+        if(updateSalonRequest.getSalonEmail()!=null){
+            salon.setEmail(updateSalonRequest.getSalonEmail());
+        }
+        else{
+            return ApiResponse.error("Salon Email is Required , And must be in valid domain");
+        }
+        if(updateSalonRequest.getSalonCity()!=null&&JordanCities.contains(updateSalonRequest.getSalonCity())){
+            salon.setLocation(updateSalonRequest.getSalonCity());
+        }
+        else{
+            return ApiResponse.error("Salon City is Required , And must a valid jordanian city");
+        }
+        if(updateSalonRequest.getSalonDescription()!=null&&updateSalonRequest.getSalonDescription().length()>10){
+            salon.setDescription(updateSalonRequest.getSalonDescription());
+        }
+        else{
+            return ApiResponse.error("Salon Description is Required and must be more than 10 characters");
+        }
+        if(updateSalonRequest.getSalonName()!=null&&updateSalonRequest.getSalonName().length()>3){
+            salon.setName(updateSalonRequest.getSalonName());
+        }
+        else{
+            return ApiResponse.error("Salon Name is Required and must be more than 3 characters");
+        }
+        if(updateSalonRequest.getOpeningTime()!=null&&updateSalonRequest.getOpeningTime().isBefore(salon.getClosingTime())){
+            salon.setOpeningTime(updateSalonRequest.getOpeningTime());
+        }
+        else{
+            return ApiResponse.error("Opening Time is Required and must be before Closing Time ");
+        }
+        if(updateSalonRequest.getClosingTime()!=null&&salon.getOpeningTime().isBefore(updateSalonRequest.getClosingTime())){
+            salon.setClosingTime(updateSalonRequest.getClosingTime());
+        }
+        else{
+            return ApiResponse.error("Closing Time is Required and must be After Opening Time ");
+        }
+        if (updateSalonRequest.getMaxNumberOfEmployees()!=null&&updateSalonRequest.getMaxNumberOfEmployees()>0) {
+            salon.setMaxEmployeesNumber(updateSalonRequest.getMaxNumberOfEmployees());
+        }
+        else{
+            return ApiResponse.error("Max number of employees is required and must be greater than 0");
+        }
+        salonRepo.save(salon);
+
+        CreateSalonResponse createSalonResponse=new CreateSalonResponse(
+          id,
+          salon.getName(),
+          salon.getSalonPhoneNumber(),
+          salon.getEmail(),
+          salon.getLocation(),
+          salon.getOwnerPhoneNumber(),
+          salon.getOwner().getUserName(),
+          salon.getOpeningTime(),
+          salon.getClosingTime(),
+          salon.getProfilePictureUrl(),
+                salon.getCurrentEmployeesNumber(),
+                salon.getMaxEmployeesNumber()
+
+        );
+        return ApiResponse.success("Salon updated Successfully", createSalonResponse);
+    }
+
+    @Override
+    public ApiResponse<Void> deleteSalon(long id) {
+        Salon salon=salonRepo.findById(id);
+        if(salon==null){
+            return ApiResponse.error("Salon Not Found");
+        }
+        salon.setStatus(SalonStatus.DELETED);
+        salonRepo.save(salon);
+        return ApiResponse.success("Salon Deleted Successfully",null);
+    }
+
+    @Override
+    public ApiResponse<CreateSalonResponse> getSalonById(long id) {
+        Salon salon=salonRepo.findById(id);
+        if(salon==null){
+            return ApiResponse.error("Salon Not Found");
+        }
+        CreateSalonResponse createSalonResponse=new CreateSalonResponse(
+                id,
+                salon.getName(),
+                salon.getSalonPhoneNumber(),
+                salon.getEmail(),
+                salon.getLocation(),
+                salon.getOwnerPhoneNumber(),
+                salon.getOwner().getUserName(),
+                salon.getOpeningTime(),
+                salon.getClosingTime(),
+                salon.getProfilePictureUrl(),
+                salon.getCurrentEmployeesNumber(),
+                salon.getMaxEmployeesNumber()
+
+        );
+        return ApiResponse.success("Salon Fetched Successfully", createSalonResponse);
+    }
+
+    @Override
+    public ApiResponse<CreateSalonResponse> getSalonByOwnerEmail(String email) {
+        Salon salon=salonRepo.findByOwnerEmail(email);
+        if(salon==null){
+            return ApiResponse.error("Salon Not Found");
+        }
+        CreateSalonResponse createSalonResponse=new CreateSalonResponse(
+                salon.getId(),
+                salon.getName(),
+                salon.getSalonPhoneNumber(),
+                salon.getEmail(),
+                salon.getLocation(),
+                salon.getOwnerPhoneNumber(),
+                salon.getOwner().getUserName(),
+                salon.getOpeningTime(),
+                salon.getClosingTime(),
+                salon.getProfilePictureUrl(),
+                salon.getCurrentEmployeesNumber(),
+                salon.getMaxEmployeesNumber()
+
+        );
+        return ApiResponse.success("Salon Fetched Successfully", createSalonResponse);
+    }
+}
