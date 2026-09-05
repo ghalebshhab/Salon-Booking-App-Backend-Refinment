@@ -38,4 +38,6 @@ public class EmploymentRequest {
     private RequestType requestType;
 
     private LocalDateTime createdAt;
+
+    private String rejectionReason;
 }

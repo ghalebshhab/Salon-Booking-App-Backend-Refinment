@@ -13,5 +13,7 @@ Salon save(Salon salon);
 List<Salon> findAll();
 List<Salon> findByStatus(SalonStatus status);
 Salon findById(long id);
-Salon findByLocation(String location);
+List<Salon> findByLocation(String location);
+boolean exsistsByPhoneNumber(String phoneNumber);
+boolean exsistsById(Long id);
 }

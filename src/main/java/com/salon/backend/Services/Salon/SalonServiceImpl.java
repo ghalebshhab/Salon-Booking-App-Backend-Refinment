@@ -127,15 +127,27 @@ public class SalonServiceImpl implements SalonService {
         if(!salon.getOwner().equals(user)){
             return ApiResponse.error("You can only update your salon");
         }
-        if(updateSalonRequest.getSalonPhoneNumber()!=null&&
-                (updateSalonRequest.getSalonPhoneNumber().matches("^\\+9627\\d{8}$")
-                                                   ||
-                        updateSalonRequest.getSalonPhoneNumber().matches("^07\\d{8}$"))){
-            salon.setSalonPhoneNumber(updateSalonRequest.getSalonPhoneNumber());
+
+        String oldPhoneNumber=salon.getSalonPhoneNumber();
+        String newPhoneNumber=updateSalonRequest.getSalonPhoneNumber();
+
+        if(newPhoneNumber!=null){
+            if(!newPhoneNumber.equals(oldPhoneNumber)){
+                boolean valid = newPhoneNumber.matches("^\\+9627\\d{8}$")
+                        || newPhoneNumber.matches("^07\\d{8}$");
+                if (!valid) {
+                    return ApiResponse.error(
+                            "Salon Phone Number must be in one of these formats: 07XXXXXXXX or +9627XXXXXXXX"
+                    );
+                }
+                if (salonRepo.exsistsByPhoneNumber(newPhoneNumber)) {
+                    return ApiResponse.error("Phone number already exists.");
+                }
+            }
+            salon.setSalonPhoneNumber(newPhoneNumber);
+
         }
-        else{
-            return ApiResponse.error("Salon Phone Number is Required , And must be in this format 0 Or +962 7XXXXXXXX");
-        }
+
         if(updateSalonRequest.getSalonEmail()!=null){
             salon.setEmail(updateSalonRequest.getSalonEmail());
         }

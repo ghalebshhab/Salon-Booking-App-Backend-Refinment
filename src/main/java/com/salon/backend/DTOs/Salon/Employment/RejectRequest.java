@@ -1,7 +1,14 @@
 package com.salon.backend.DTOs.Salon.Employment;
 
+import lombok.*;
 
-public record RejectRequest(
-        Long requestId,
-        String rejectionReason
-) {}
+@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class RejectRequest{
+    public Long requestId;
+    public String rejectionReason;
+
+}

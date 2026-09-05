@@ -24,14 +24,15 @@ public class Salon {
 
     private String name;
 
+    // this is the salon phone , not the owner .
     private String salonPhoneNumber;
 
     private String ownerPhoneNumber;
-
+    // also this is the salon email .
     private String email;
 
     private String location;
-
+    // as a salon services description  , about the salon .
     private String description;
 
     @OneToOne(cascade = CascadeType.ALL)
@@ -53,4 +54,6 @@ public class Salon {
     private String profilePictureUrl;
 
     private SalonStatus status;
+
+    private SalonOpenningStatus openningStatus;
 }

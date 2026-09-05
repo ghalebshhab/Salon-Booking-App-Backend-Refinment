@@ -132,4 +132,7 @@ public class AuthServiceImpl implements AuthService {
 
         return ALLOWED_EMAIL_DOMAINS.contains(domain);
     }
+
+
+
 }
