@@ -1,4 +1,4 @@
-package com.salon.backend.DTOs.Salon.Employment;
+package com.salon.backend.DTOs.Salon.Employment.Join;
 
 import com.salon.backend.Entities.salons.employment.EmploymentRequestStatus;
 import com.salon.backend.Entities.salons.employment.RequestType;

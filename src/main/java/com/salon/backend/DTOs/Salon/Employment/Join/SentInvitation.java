@@ -1,4 +1,4 @@
-package com.salon.backend.DTOs.Salon.Employment;
+package com.salon.backend.DTOs.Salon.Employment.Join;
 
 import lombok.*;
 
