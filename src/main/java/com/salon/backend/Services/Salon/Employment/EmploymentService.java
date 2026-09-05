@@ -41,8 +41,5 @@ ApiResponse<EmploymentRequest> sentInvitation(SentInvitation sentInvitation, Lon
             String reason
     );
 
-    ApiResponse<EmploymentRequest> completePendingEmployment(
-            Long requestId,
-            Long currentUserId
-    );
+
 }
