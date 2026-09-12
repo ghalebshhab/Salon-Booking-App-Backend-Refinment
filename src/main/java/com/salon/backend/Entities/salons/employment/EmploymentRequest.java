@@ -2,6 +2,7 @@ package com.salon.backend.Entities.salons.employment;
 
 
 import com.salon.backend.Entities.salons.Salon;
+import com.salon.backend.Entities.salons.hiringposts.HiringPost;
 import com.salon.backend.Entities.users.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -26,10 +27,14 @@ public class EmploymentRequest {
     private Salon salon;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private User Sender;
+    private User sender;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private User Receiver;
+    private User receiver;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hiring_post_id")
+    private HiringPost hiringPost;
 
     @Enumerated(EnumType.STRING)
     private EmploymentRequestStatus status;
@@ -37,7 +42,12 @@ public class EmploymentRequest {
     @Enumerated(EnumType.STRING)
     private RequestType requestType;
 
+    @Enumerated(EnumType.STRING)
+    private EmploymentRequestSource requestSource;
+
     private LocalDateTime createdAt;
 
     private String rejectionReason;
+
+
 }
