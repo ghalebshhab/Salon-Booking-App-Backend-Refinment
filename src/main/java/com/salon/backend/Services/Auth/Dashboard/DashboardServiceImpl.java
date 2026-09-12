@@ -72,7 +72,7 @@ public class DashboardServiceImpl implements DashboardService {
             return ApiResponse.error("Owner not found");
         }
 
-        Salon salon=salonRepo.findByOwnerEmail(own.get().getEmail());
+        Salon salon=salonRepo.findByEmail(own.get().getEmail());
         if(salon==null){
             return ApiResponse.error("Salon not found");
         }
@@ -147,10 +147,11 @@ public class DashboardServiceImpl implements DashboardService {
         return ApiResponse.error("User not active");
     }
     if(user.getRole()==UserRole.OWNER){
-        Salon salon=salonRepo.findById(user.getId());
-        if(salon==null){
+        Optional<Salon> opsalon=salonRepo.findById(user.getId());
+        if(opsalon.isEmpty()){
             return ApiResponse.error("Salon not found");
         }
+        Salon salon=opsalon.get();
         salon.setStatus(SalonStatus.Inactive);
         salonRepo.save(salon);
     }
