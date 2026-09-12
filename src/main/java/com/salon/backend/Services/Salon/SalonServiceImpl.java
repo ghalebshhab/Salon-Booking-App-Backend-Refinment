@@ -57,10 +57,16 @@ public class SalonServiceImpl implements SalonService {
                         .matches("^[A-Za-z0-9+_.-]+@(.+)$")){
             return ApiResponse.error("Salon Email is Invalid");
         }
+        if(salonRepo.existsByEmail(createSalonRequest.getSalonEmail())) {
+            return ApiResponse.error("Salon Email Already Exists");
+        }
         if (createSalonRequest.getSalonPhoneNumber() == null ||
                 (!createSalonRequest.getSalonPhoneNumber().matches("^\\+9627\\d{8}$")
                         && !createSalonRequest.getSalonPhoneNumber().matches("^07\\d{8}$"))) {
             return ApiResponse.error("Phone number can not be null and must be like +9627XXXXXXXX or 07XXXXXXXX");
+        }
+        if(salonRepo.existsBySalonPhoneNumber(createSalonRequest.getSalonPhoneNumber())){
+            return ApiResponse.error("Salon Phone Number already exists");
         }
         if(createSalonRequest.getOpeningTime()==null){
             return ApiResponse.error("Opening Time is Required");
@@ -140,7 +146,7 @@ public class SalonServiceImpl implements SalonService {
                             "Salon Phone Number must be in one of these formats: 07XXXXXXXX or +9627XXXXXXXX"
                     );
                 }
-                if (salonRepo.exsistsByPhoneNumber(newPhoneNumber)) {
+                if (salonRepo.existsBySalonPhoneNumber(newPhoneNumber)) {
                     return ApiResponse.error("Phone number already exists.");
                 }
             }
@@ -212,10 +218,11 @@ public class SalonServiceImpl implements SalonService {
 
     @Override
     public ApiResponse<Void> deleteSalon(long id) {
-        Salon salon=salonRepo.findById(id);
-        if(salon==null){
+        Optional<Salon> opSalon=salonRepo.findById(id);
+        if(opSalon.isEmpty()){
             return ApiResponse.error("Salon Not Found");
         }
+        Salon salon=opSalon.get();
         salon.setStatus(SalonStatus.DELETED);
         salonRepo.save(salon);
         return ApiResponse.success("Salon Deleted Successfully",null);
@@ -223,10 +230,11 @@ public class SalonServiceImpl implements SalonService {
 
     @Override
     public ApiResponse<CreateSalonResponse> getSalonById(long id) {
-        Salon salon=salonRepo.findById(id);
-        if(salon==null){
+        Optional<Salon> opSalon=salonRepo.findById(id);
+        if(opSalon.isEmpty()){
             return ApiResponse.error("Salon Not Found");
         }
+        Salon salon=opSalon.get();
         CreateSalonResponse createSalonResponse=new CreateSalonResponse(
                 id,
                 salon.getName(),
