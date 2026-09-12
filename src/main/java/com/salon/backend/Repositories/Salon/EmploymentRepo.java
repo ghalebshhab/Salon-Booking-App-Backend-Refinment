@@ -15,8 +15,7 @@ public interface EmploymentRepo extends JpaRepository<EmploymentRequest, Long> {
     boolean existsById(Long employmentRequestId);
     boolean existsBySenderAndReceiverAndStatus(User sender, User receiver, EmploymentRequestStatus status);
     boolean existsBySenderAndSalonAndStatus(User sender, Salon salon, EmploymentRequestStatus status);
-    boolean existsBySalonAndUserAndStatus(User user, Salon salon, EmploymentRequestStatus status);
-    List<EmploymentRequest> findAllBySalonAndStatus(Salon salon, EmploymentRequestStatus status);
+     List<EmploymentRequest> findAllBySalonAndStatus(Salon salon, EmploymentRequestStatus status);
     List<EmploymentRequest> findAllBySenderAndStatus(User sender, EmploymentRequestStatus status);
     @Query("""
     SELECT e

@@ -3,17 +3,27 @@ package com.salon.backend.Repositories.Salon;
 import com.salon.backend.Entities.salons.Salon;
 import com.salon.backend.Entities.salons.SalonStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
-public interface SalonRepo extends JpaRepository<Salon,Long> {
-Salon findByOwnerPhoneNumber(String ownerPhoneNumber);
-Salon findByOwnerEmail(String ownerEmail);
-Salon save(Salon salon);
-List<Salon> findAll();
-List<Salon> findByStatus(SalonStatus status);
-Salon findById(long id);
-List<Salon> findByLocation(String location);
-boolean exsistsByPhoneNumber(String phoneNumber);
-boolean exsistsById(Long id);
+@Repository
+public interface SalonRepo extends JpaRepository<Salon, Long> {
+
+    Salon findByOwnerPhoneNumber(String ownerPhoneNumber);
+
+    Salon findByOwnerEmail(String email);
+
+    Salon findByEmail(String email);
+
+    List<Salon> findByStatus(SalonStatus status);
+
+    List<Salon> findByLocation(String location);
+
+    boolean existsBySalonPhoneNumber(String salonPhoneNumber);
+
+    boolean existsByOwnerPhoneNumber(String ownerPhoneNumber);
+
+    boolean existsByEmail(String email);
 }
