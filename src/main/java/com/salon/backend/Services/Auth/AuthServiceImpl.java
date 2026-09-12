@@ -25,6 +25,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final UserRepo userRepo;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+
     private static final List<String> ALLOWED_EMAIL_DOMAINS = List.of(
             "gmail.com",
             "hotmail.com",
@@ -33,106 +34,371 @@ public class AuthServiceImpl implements AuthService {
             "icloud.com",
             "jomap.com"
     );
-    @Override
-    public ApiResponse<RigesterResponse> Rigester(RigesterRequest request) {
-        if(request.getFirstName()==null || request.getLastName()==null){
-            return ApiResponse.error("First Name or Last Name can not be Null , Please fill them .");
-        }
-        if(request.getFirstName().length()<3 ||  request.getLastName().length()<3){
-            return ApiResponse.error("First Name or Last Name can not be Less Than 3 Characters , Please fill them .");
-        }
-        if(request.getUserName()==null || !request.getUserName().matches("^[a-z](?!(?:.*_){2})(?!(?:.*\\.){2})[a-z0-9_.]*$")){
-            return ApiResponse.error("User Name can not be null , or contain spaces or - .");
-        }
-        String normalizedEmail=request.getEmail().toLowerCase(Locale.ROOT);
-        if( !isAllowedEmailDomain(normalizedEmail)){
-            return ApiResponse.error("Email Address can not be Null , and must be with valid domain .");
-        }
-        if (request.getPhoneNumber() == null ||
-                (!request.getPhoneNumber().matches("^\\+9627\\d{8}$")
-                        && !request.getPhoneNumber().matches("^07\\d{8}$"))) {
-            return ApiResponse.error("Phone number must be like +9627XXXXXXXX or 07XXXXXXXX");
-        }
-        if(request.getPassword()==null
-                ||
-                !request.getPassword().matches("^(?=.*[A-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9]).{8,}$")){
 
-            return ApiResponse.error("The password can not be null or less than 8 chars , must be contain one capital letter , one symbol , one number .");
+
+    // =========================================================
+    // REGISTER
+    // =========================================================
+
+    @Override
+    public ApiResponse<RigesterResponse> Rigester(
+            RigesterRequest request) {
+
+        // -----------------------------------------------------
+        // Validate first name and last name
+        // -----------------------------------------------------
+
+        if (request.getFirstName() == null
+                || request.getFirstName().isBlank()
+                || request.getLastName() == null
+                || request.getLastName().isBlank()) {
+
+            return ApiResponse.error(
+                    "First name and last name are required."
+            );
         }
-        if(userRepo.existsByemail(normalizedEmail)){
-            return ApiResponse.error("Email Address already exists .");
+
+        if (request.getFirstName().trim().length() < 3
+                || request.getLastName().trim().length() < 3) {
+
+            return ApiResponse.error(
+                    "First name and last name must contain at least 3 characters."
+            );
         }
-        if(userRepo.existsByphoneNumber(request.getPhoneNumber())){
-            return ApiResponse.error("Phone Number already exists .");
+
+
+        // -----------------------------------------------------
+        // Validate username
+        // -----------------------------------------------------
+
+        if (request.getUserName() == null
+                || request.getUserName().isBlank()) {
+
+            return ApiResponse.error(
+                    "Username is required."
+            );
         }
-        if(userRepo.existsByuserName(request.getUserName())){
-            return ApiResponse.error("Username already exists .");
+
+        String normalizedUsername =
+                request.getUserName()
+                        .trim()
+                        .toLowerCase(Locale.ROOT);
+
+        if (!normalizedUsername.matches(
+                "^[a-z](?!(?:.*_){2})(?!(?:.*\\.){2})[a-z0-9_.]*$")) {
+
+            return ApiResponse.error(
+                    "Username must start with a lowercase letter and may contain only letters, numbers, underscores, and dots."
+            );
         }
+
+
+        // -----------------------------------------------------
+        // Validate email
+        // -----------------------------------------------------
+
+        if (request.getEmail() == null
+                || request.getEmail().isBlank()) {
+
+            return ApiResponse.error(
+                    "Email address is required."
+            );
+        }
+
+        String normalizedEmail =
+                request.getEmail()
+                        .trim()
+                        .toLowerCase(Locale.ROOT);
+
+        if (!isAllowedEmailDomain(normalizedEmail)) {
+
+            return ApiResponse.error(
+                    "Email address must use a valid email domain."
+            );
+        }
+
+
+        // -----------------------------------------------------
+        // Validate phone number
+        // -----------------------------------------------------
+
+        if (request.getPhoneNumber() == null
+                || request.getPhoneNumber().isBlank()) {
+
+            return ApiResponse.error(
+                    "Phone number is required."
+            );
+        }
+
+        String normalizedPhoneNumber =
+                request.getPhoneNumber().trim();
+
+        if (!normalizedPhoneNumber.matches("^\\+9627\\d{8}$")
+                && !normalizedPhoneNumber.matches("^07\\d{8}$")) {
+
+            return ApiResponse.error(
+                    "Phone number must be in one of these formats: +9627XXXXXXXX or 07XXXXXXXX"
+            );
+        }
+
+
+        // -----------------------------------------------------
+        // Validate password
+        // -----------------------------------------------------
+
+        if (request.getPassword() == null
+                || request.getPassword().isBlank()) {
+
+            return ApiResponse.error(
+                    "Password is required."
+            );
+        }
+
+        if (!request.getPassword().matches(
+                "^(?=.*[A-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9]).{8,}$")) {
+
+            return ApiResponse.error(
+                    "Password must contain at least 8 characters, one uppercase letter, one number, and one special character."
+            );
+        }
+
+
+        // -----------------------------------------------------
+        // Check email uniqueness
+        // -----------------------------------------------------
+
+        if (userRepo.existsByemail(normalizedEmail)) {
+
+            return ApiResponse.error(
+                    "Email address already exists."
+            );
+        }
+
+
+        // -----------------------------------------------------
+        // Check phone number uniqueness
+        // -----------------------------------------------------
+
+        if (userRepo.existsByphoneNumber(normalizedPhoneNumber)) {
+
+            return ApiResponse.error(
+                    "Phone number already exists."
+            );
+        }
+
+
+        // -----------------------------------------------------
+        // Check username uniqueness
+        // -----------------------------------------------------
+
+        if (userRepo.existsByuserName(normalizedUsername)) {
+
+            return ApiResponse.error(
+                    "Username already exists."
+            );
+        }
+
+
+        // -----------------------------------------------------
+        // Create user
+        // -----------------------------------------------------
+
         User newUser = new User();
+
+        newUser.setFirstName(request.getFirstName().trim());
+        newUser.setLastName(request.getLastName().trim());
+
         newUser.setEmail(normalizedEmail);
-        newUser.setUserName(request.getUserName().toLowerCase(Locale.ROOT));
-        newUser.setPassword(bCryptPasswordEncoder.encode(request.getPassword()));
-        newUser.setPhoneNumber(request.getPhoneNumber());
+        newUser.setUserName(normalizedUsername);
+
+        newUser.setPassword(
+                bCryptPasswordEncoder.encode(
+                        request.getPassword()
+                )
+        );
+
+        newUser.setPhoneNumber(normalizedPhoneNumber);
+
         newUser.setRole(UserRole.USER);
         newUser.setStatus(UserStatus.Active);
+
+
+        // -----------------------------------------------------
+        // Save user
+        // -----------------------------------------------------
+
         userRepo.save(newUser);
 
+
+        // -----------------------------------------------------
+        // Create registration response
+        // -----------------------------------------------------
+
         RigesterResponse response = new RigesterResponse();
-        response.setFirstName(request.getFirstName());
-        response.setLastName(request.getLastName());
-        response.setEmail(normalizedEmail);
-        response.setUserName(request.getUserName());
+
+        response.setFirstName(newUser.getFirstName());
+        response.setLastName(newUser.getLastName());
+        response.setEmail(newUser.getEmail());
+        response.setUserName(newUser.getUserName());
         response.setId(newUser.getId());
-        response.setPhoneNumber(request.getPhoneNumber());
+        response.setPhoneNumber(newUser.getPhoneNumber());
 
 
-        return ApiResponse.success("Rigestered Successfully , Go to login ." , response);
+        return ApiResponse.success(
+                "Registered successfully. Go to login.",
+                response
+        );
     }
 
+
+    // =========================================================
+    // LOGIN
+    // =========================================================
+
     @Override
-    public ApiResponse<LoginResponse> Login(LoginRequest request) {
-        String normalizedEmail=request.getEmail().toLowerCase(Locale.ROOT);
-        User user=userRepo.findByemail(normalizedEmail);
-        if(user==null){
-            return ApiResponse.error("User with this email dose not exist .");
+    public ApiResponse<LoginResponse> Login(
+            LoginRequest request) {
+
+        // -----------------------------------------------------
+        // Validate email
+        // -----------------------------------------------------
+
+        if (request.getEmail() == null
+                || request.getEmail().isBlank()) {
+
+            return ApiResponse.error(
+                    "Email address is required."
+            );
         }
-        User saveduser=user;
-        if(!bCryptPasswordEncoder.matches(request.getPassword(),saveduser.getPassword())){
-            return ApiResponse.error("Incorrect Password . Please Try Again .");
+
+        String normalizedEmail =
+                request.getEmail()
+                        .trim()
+                        .toLowerCase(Locale.ROOT);
+
+
+        // -----------------------------------------------------
+        // Validate password
+        // -----------------------------------------------------
+
+        if (request.getPassword() == null
+                || request.getPassword().isBlank()) {
+
+            return ApiResponse.error(
+                    "Password is required."
+            );
         }
-        String token=jwtService.generateToken(normalizedEmail);
-        LoginResponse response=new LoginResponse(
-                saveduser.getId(),
-                saveduser.getUserName(),
+
+
+        // -----------------------------------------------------
+        // Find user
+        // -----------------------------------------------------
+
+        User user = userRepo.findByemail(normalizedEmail);
+
+        if (user == null) {
+
+            return ApiResponse.error(
+                    "User with this email does not exist."
+            );
+        }
+
+
+        // -----------------------------------------------------
+        // Check account status
+        // -----------------------------------------------------
+
+        if (user.getStatus() != UserStatus.Active) {
+
+            return ApiResponse.error(
+                    "Your account is not active."
+            );
+        }
+
+
+        // -----------------------------------------------------
+        // Check password
+        // -----------------------------------------------------
+
+        if (!bCryptPasswordEncoder.matches(
+                request.getPassword(),
+                user.getPassword())) {
+
+            return ApiResponse.error(
+                    "Incorrect password. Please try again."
+            );
+        }
+
+
+        // -----------------------------------------------------
+        // Generate JWT
+        // -----------------------------------------------------
+
+        String token =
+                jwtService.generateToken(normalizedEmail);
+
+
+        // -----------------------------------------------------
+        // Create login response
+        // -----------------------------------------------------
+
+        LoginResponse response = new LoginResponse(
+                user.getId(),
+                user.getUserName(),
                 token,
                 "Bearer",
-                saveduser.getRole(),
-                normalizedEmail
-
+                user.getRole(),
+                user.getEmail()
         );
 
 
-        return ApiResponse.success("Loged Successfully , Loading ...  ." , response);
+        return ApiResponse.success(
+                "Logged in successfully. Loading...",
+                response
+        );
     }
+
+
+    // =========================================================
+    // LOGOUT
+    // =========================================================
 
     @Override
     public ApiResponse<ResponseEntity> Logout() {
+
+        /*
+         * JWT authentication is stateless.
+         *
+         * The actual logout implementation depends on
+         * where the JWT is stored and whether we use
+         * token revocation / refresh tokens.
+         *
+         * We should implement this together with the
+         * authentication/security configuration.
+         */
+
         return null;
     }
+
+
+    // =========================================================
+    // EMAIL DOMAIN VALIDATION
+    // =========================================================
 
     private boolean isAllowedEmailDomain(String email) {
 
         int atIndex = email.lastIndexOf("@");
 
-        if (atIndex == -1 || atIndex == email.length() - 1) {
+        if (atIndex == -1
+                || atIndex == email.length() - 1) {
+
             return false;
         }
 
-        String domain = email.substring(atIndex + 1).toLowerCase(Locale.ROOT);
+        String domain =
+                email.substring(atIndex + 1)
+                        .toLowerCase(Locale.ROOT);
 
         return ALLOWED_EMAIL_DOMAINS.contains(domain);
     }
-
-
-
 }
