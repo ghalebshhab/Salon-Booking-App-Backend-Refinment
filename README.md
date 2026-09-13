@@ -1,42 +1,44 @@
-# Salon Hub Frontend
+# Salon Hub Backend
 
-Frontend application for **Salon Hub**, a full-stack salon management and booking platform.
+Backend services for **Salon Hub**, a full-stack salon management and booking platform.
 
 ## Overview
 
-This frontend provides the user-facing experience for discovering salons, viewing services, managing profiles, booking appointments, interacting with salon owners, and accessing other platform features.
+Salon Hub is designed to support salon discovery, service management, booking workflows, hiring posts, user profiles, media sharing, and interactions between salon owners and users.
+
+This repository contains the backend implementation, including domain entities, business logic, database operations, and application APIs.
 
 ## Features
 
-- Salon discovery
-- Service browsing
+- User profile management
+- Salon creation and management
+- Service management
 - Booking workflows
-- User profiles
 - Hiring posts
-- Media and image display
+- Media and image handling
 - Owner-user interactions
-- Responsive user interface
-- Backend/API integration
+- Business logic and validation
+- Database integration
+- API endpoints for frontend integration
 
 ## Tech Stack
 
-- React.js
-- TypeScript
-- JavaScript
-- HTML5
-- CSS3
-- API Integration
+- .NET
+- C#
+- PostgreSQL
+- REST APIs
+- Entity/Domain modeling
 - Git & GitHub
 
-## Project Goals
+## Architecture
 
-The frontend is designed with a focus on:
+The project follows a structured backend design with separation between:
 
-- Clean user experience
-- Reusable components
-- Maintainable code
-- Responsive layouts
-- Smooth integration with backend services
+- Domain entities
+- Business logic
+- Data access
+- API layer
+- Validation
 
 ## Project Status
 
@@ -44,8 +46,8 @@ Active development.
 
 ## Related Repository
 
-Backend:
-`https://github.com/ghalebshhab/Salon-Booking-App-Backend-Refinment`
+Frontend:
+`https://github.com/ghalebshhab/Salon-Booking-App-FrontEnd`
 
 ## Author
 
